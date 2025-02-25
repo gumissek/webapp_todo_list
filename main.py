@@ -1,6 +1,6 @@
 import datetime
 import os
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect, url_for
 from flask_bootstrap import Bootstrap5
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Integer, String, Boolean, DateTime
@@ -49,30 +49,49 @@ class Task(db.Model):
     id : Mapped[int] = mapped_column(Integer,primary_key=True)
     text : Mapped[str] = mapped_column(String(250),nullable=False)
     status : Mapped[bool] = mapped_column(Boolean,nullable=False)
-    date_start : Mapped[str] = mapped_column(DateTime,nullable=False)
-    date_end : Mapped[str] = mapped_column(DateTime,nullable=False)
+    date_start : Mapped[str] = mapped_column(String(250),nullable=False)
+    date_end : Mapped[str] = mapped_column(String(250),nullable=False)
 
 with app.app_context():
     db.create_all()
 
 
-temporary_tasks=[]
-print(len(temporary_tasks))
+temporary_tasks = []
+
 
 @app.route('/',methods=['POST','GET'])
 def homepage():
     add_task_form=AddTaskForm()
-    print()
+    saved_tasks=db.session.execute(db.select(Task)).scalars().all()
     if add_task_form.validate_on_submit():
         task_text=request.form['text']
         task_date_end = request.form['date_end']
         new_task=Task(text=task_text,status=False,date_start=datetime.datetime.now().strftime('%d-%m-%Y'),date_end=task_date_end)
         temporary_tasks.append(new_task)
+        return redirect(url_for('homepage'))
 
-    return render_template('index.html', addtaskform=add_task_form,temporary_tasks=temporary_tasks)
+    return render_template('index.html', addtaskform=add_task_form,temporary_tasks=temporary_tasks,saved=saved_tasks)
 
 
+@app.route('/save',methods=['GET','POST'])
+def save_temporary():
+    for task in temporary_tasks:
+        db.session.add(task)
+        temporary_tasks.remove(task)
 
+    db.session.commit()
+    return redirect(url_for('homepage'))
+
+
+@app.route('/mark',methods=['POST','GET'])
+def mark_done():
+    task_to_mark=db.session.execute(db.select(Task).where(Task.id==request.args.get('task_id'))).scalar()
+    if task_to_mark.status:
+        task_to_mark.status=False
+    else:
+        task_to_mark.status=True
+    db.session.commit()
+    return redirect(url_for('homepage'))
 
 if __name__=='__main__':
     app.run(debug=True,port=5001)

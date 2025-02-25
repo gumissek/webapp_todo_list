@@ -12,12 +12,23 @@
     <hr class="my-4">
     <h2 class="text-center">Zadania tymczasowe</h2>
     {%if temporary_tasks%}
+    <a href={{url_for('save_temporary')}} class="btn btn-warning">Zapisz zadania</a>
+
     {% for task in temporary_tasks%}
-    <p>{{task.text}}</p>
+    <p>{{task.text}} {{task.status}} {{task.date_start}} {{task.date_end}} </p>
     {%endfor %}
     {%endif%}
+
+
     <hr class="my-4">
-    <h2 class="text-center">Zadania stale</h2>
+
+    <h2 class="text-center">Zadania na pozniej</h2>
+    {%if saved%}
+    {%for saved_task in saved%}
+    <p> {{saved_task.id}}     {{saved_task.text}}   {{saved_task.status}}   <a href={{url_for('mark_done',task_id=saved_task.id)}}>Done</a></p>
+    {%endfor %}
+
+    {%endif%}
 </div>
 
 {%endblock%}

@@ -6,5 +6,5 @@ from wtforms.validators import DataRequired
 
 class AddTaskForm(FlaskForm):
     text = StringField(label='Podaj tresc zadania',validators=[DataRequired()])
-    date_end = DateField(label='Podaj czas zakonczenia zadania',format='%d-%m-%Y',validators=[DataRequired()])
+    date_end = DateField(label='Podaj czas zakonczenia zadania',validators=[DataRequired()])
     submit = SubmitField(label='Dodaj zadanie')
