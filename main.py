@@ -14,15 +14,13 @@ from forms import AddTaskForm
 # done wyswietlanie tej listy jako zadan tymczasowych
 # done jak mamy ta liste i kliknemy guzik to przjedzie po tych zadaniach tymczasowych ,zapisze je w bazie danych i usunie z temporary
 # done wyciagamy zdania z bazy danych i wyswietlamy jako osobna lista ponziej zadan tymczasowych -> potem do oznaczenia jako wykonane i usuwanie
-# todo sortowanie tabeli po statusie wykonania
-# todo przycisk zmiany statusu wykonania zmienia sie w zaleznosci od statusu zdania
-
-# todo strona glowna ktora zawiera zadania
-# todo strona glowna: zawiera forma ktory ma tekst i date do kiedy
-
-
-# todo layout
+# done przycisk zmiany statusu wykonania zmienia sie w zaleznosci od statusu zdania
+# done strona glowna ktora zawiera zadania
+# done strona glowna: zawiera forma ktory ma tekst i date do kiedy
+# done layout
 # todo zmienic debugowanie jesli dziala jak nalezy  strona
+# https://github.com/gumissek/webapp_todo_list
+
 
 FLASK_KEY = os.getenv('FLASK_KEY', '123312')
 DATABASE_URI = os.getenv('DATABASE_URI', 'sqlite:///todo_task.db')
@@ -63,11 +61,11 @@ temporary_tasks = []
 @app.route('/', methods=['POST', 'GET'])
 def homepage():
     add_task_form = AddTaskForm()
-    saved_tasks = db.session.execute(db.select(Task)).scalars().all()
+    saved_tasks = db.session.execute(db.select(Task).order_by(Task.status)).scalars().all()
     if add_task_form.validate_on_submit():
         task_text = request.form['text']
         task_date_end = request.form['date_end']
-        new_task = Task(text=task_text, status=False, date_start=datetime.datetime.now().strftime('%d-%m-%Y'),
+        new_task = Task(text=task_text, status=False, date_start=datetime.datetime.now().strftime('%Y-%m-%d'),
                         date_end=task_date_end)
         temporary_tasks.append(new_task)
         return redirect(url_for('homepage'))
@@ -80,8 +78,8 @@ def save_temporary():
     for task in temporary_tasks:
         db.session.add(task)
         temporary_tasks.remove(task)
+        db.session.commit()
 
-    db.session.commit()
     return redirect(url_for('homepage'))
 
 
@@ -104,5 +102,21 @@ def delete_task():
     return redirect(url_for('homepage'))
 
 
+@app.route('/mark_tmp', methods=['POST', 'GET'])
+def mark_as_done_tmp():
+    if temporary_tasks[int(request.args.get('index'))].status:
+        temporary_tasks[int(request.args.get('index'))].status = False
+    else:
+        temporary_tasks[int(request.args.get('index'))].status = True
+    return redirect(url_for('homepage'))
+
+
+@app.route('/delete_tmp', methods=['POST', 'GET'])
+def delete_task_tmp():
+    temporary_tasks.remove(temporary_tasks[int(request.args.get('index'))])
+
+    return redirect(url_for('homepage'))
+
+
 if __name__ == '__main__':
-    app.run(debug=True, port=5001)
+    app.run(debug=False, port=5001)

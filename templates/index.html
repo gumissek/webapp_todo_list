@@ -5,31 +5,102 @@
 {%block content%}
 
 <div class="container">
-    <h1>TODO List</h1>
+    <h1 class="my-4 text-center">To-Do List</h1>
     {{render_form(addtaskform, novalidate=True)}}
 
 
     <hr class="my-4">
-    <h2 class="text-center">Zadania tymczasowe</h2>
-    {%if temporary_tasks%}
-    <a href={{url_for('save_temporary')}} class="btn btn-warning">Zapisz zadania</a>
+    <h2 class="text-center">Temporary tasks:</h2>
 
-    {% for task in temporary_tasks%}
-    <p>{{task.text}} {{task.status}} {{task.date_start}} {{task.date_end}} </p>
-    {%endfor %}
+    {%if temporary_tasks%}
+    <a href={{url_for('save_temporary')}} class="btn btn-primary my-4">Save tasks:</a>
+    <table class="table ">
+
+
+        <thead class="table-dark">
+        <tr>
+            <th scope="col">Task:</th>
+            <th scope="col">Date start:</th>
+            <th scope="col">Date end:</th>
+            <th scope="col" class="text-center">#</th>
+        </tr>
+        </thead>
+        <tbody class="table-group-divider">
+        {% for task in temporary_tasks%}
+
+        {%if task.status==False%}
+        <tr class="table-danger">
+            <td>{{task.text}}</td>
+            <td>{{task.date_start}}</td>
+            <td>{{task.date_end}}</td>
+            <td class="text-center">
+                <a href={{url_for('mark_as_done_tmp',index=temporary_tasks.index(task))}}
+                   class="btn btn-success">Done</a>
+                <a href={{url_for('delete_task_tmp',index=temporary_tasks.index(task))}}
+                   class="btn btn-danger">Delete</a>
+            </td>
+        </tr>
+        {%else%}
+        <tr class="table-success">
+            <td>{{task.text}}</td>
+            <td>{{task.date_start}}</td>
+            <td>{{task.date_end}}</td>
+            <td class="text-center">
+                <a href={{url_for('mark_as_done_tmp',index=temporary_tasks.index(task))}}
+                   class="btn btn-warning">Undone</a>
+                <a href={{url_for('delete_task_tmp',index=temporary_tasks.index(task))}}
+                   class="btn btn-danger">Delete</a>
+            </td>
+        </tr>
+        {%endif%}
+        {%endfor %}
+        </tbody>
+    </table>
     {%endif%}
 
 
     <hr class="my-4">
 
-    <h2 class="text-center">Zadania na pozniej</h2>
+    <h2 class="text-center my-4">Saved tasks:</h2>
     {%if saved%}
-    {%for saved_task in saved%}
-    <p> {{saved_task.id}} {{saved_task.text}} {{saved_task.status}} <a
-            href={{url_for('mark_as_done',task_id=saved_task.id)}}>Done</a> <a
-            href={{url_for('delete_task',delete_id=saved_task.id)}}>Usun</a></p>
-    {%endfor %}
+    <table class="table ">
 
+
+        <thead class="table-dark">
+        <tr>
+            <th scope="col">Task:</th>
+            <th scope="col">Date start:</th>
+            <th scope="col">Date end:</th>
+            <th scope="col" class="text-center">#</th>
+        </tr>
+        </thead>
+        <tbody class="table-group-divider">
+        {%for saved_task in saved%}
+
+        {%if saved_task.status==False%}
+        <tr class="table-danger">
+            <td>{{saved_task.text}}</td>
+            <td>{{saved_task.date_start}}</td>
+            <td>{{saved_task.date_end}}</td>
+            <td class="text-center">
+                <a href={{url_for('mark_as_done',task_id=saved_task.id)}} class="btn btn-success">Done</a>
+                <a href={{url_for('delete_task',delete_id=saved_task.id)}} class="btn btn-danger">Delete</a>
+            </td>
+        </tr>
+        {%else%}
+        <tr class="table-success">
+            <td>{{saved_task.text}}</td>
+            <td>{{saved_task.date_start}}</td>
+            <td>{{saved_task.date_end}}</td>
+            <td class="text-center">
+                <a href={{url_for('mark_as_done',task_id=saved_task.id)}} class="btn btn-warning">Undone</a>
+                <a href={{url_for('delete_task',delete_id=saved_task.id)}} class="btn btn-danger">Delete</a>
+            </td>
+        </tr>
+        {%endif%}
+        {%endfor %}
+        </tbody>
+    </table>
     {%endif%}
 </div>
 
