@@ -1,0 +1,23 @@
+{%extends 'base.html'%}
+{%block title%} TODO LIST{%endblock%}
+{%from 'bootstrap5/form.html' import render_form%}
+
+{%block content%}
+
+<div class="container">
+    <h1>TODO List</h1>
+    {{render_form(addtaskform, novalidate=True)}}
+
+
+    <hr class="my-4">
+    <h2 class="text-center">Zadania tymczasowe</h2>
+    {%if temporary_tasks%}
+    {% for task in temporary_tasks%}
+    <p>{{task.text}}</p>
+    {%endfor %}
+    {%endif%}
+    <hr class="my-4">
+    <h2 class="text-center">Zadania stale</h2>
+</div>
+
+{%endblock%}
