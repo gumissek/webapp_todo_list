@@ -63,6 +63,14 @@
 
     <h2 class="text-center my-4">Saved tasks:</h2>
     {%if saved%}
+    {% with messages = get_flashed_messages()%}
+    {%if messages%}
+    {%for message in messages%}
+    <p style="color:red" class="flash text-center">{{message}}</p>
+    {%endfor%}
+    {% endif %}
+    {% endwith %}
+
     <table class="table ">
 
 
@@ -101,6 +109,7 @@
         {%endfor %}
         </tbody>
     </table>
+    {{render_form(email_form, novalidate=True)}}
     {%endif%}
 </div>
 

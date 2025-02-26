@@ -1,11 +1,12 @@
 import datetime
 import os
-from flask import Flask, render_template, request, redirect, url_for
+import smtplib
+from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_bootstrap import Bootstrap5
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import Integer, String, Boolean, DateTime
+from sqlalchemy import Integer, String, Boolean
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-from forms import AddTaskForm
+from forms import AddTaskForm, SendMailForm
 
 # done strona we flasku ktora pokazuje zadania tymczasowe i stale odziellnie
 # done zadanie tymczasowe- obiekt: status wykonania, tekst,czas wykonania
@@ -18,12 +19,16 @@ from forms import AddTaskForm
 # done strona glowna ktora zawiera zadania
 # done strona glowna: zawiera forma ktory ma tekst i date do kiedy
 # done layout
-# todo zmienic debugowanie jesli dziala jak nalezy  strona
+# done  zmienic debugowanie jesli dziala jak nalezy  strona
 # https://github.com/gumissek/webapp_todo_list
+
 
 
 FLASK_KEY = os.getenv('FLASK_KEY', '123312')
 DATABASE_URI = os.getenv('DATABASE_URI', 'sqlite:///todo_task.db')
+MY_MAIL_SMTP = os.getenv('MY_MAIL_SMTP', 'smtp.gmail.com')
+MY_MAIL = os.getenv('MY_MAIL', 'pythonkurskurs@gmail.com')
+MY_MAIL_PASSWORD = os.getenv('MY_MAIL_PASSWORD', 'svvbtqswtoxdbchw')
 
 app = Flask(__name__)
 bootstrap = Bootstrap5(app)
@@ -61,6 +66,7 @@ temporary_tasks = []
 @app.route('/', methods=['POST', 'GET'])
 def homepage():
     add_task_form = AddTaskForm()
+    email_form = SendMailForm()
     saved_tasks = db.session.execute(db.select(Task).order_by(Task.status)).scalars().all()
     if add_task_form.validate_on_submit():
         task_text = request.form['text']
@@ -69,8 +75,19 @@ def homepage():
                         date_end=task_date_end)
         temporary_tasks.append(new_task)
         return redirect(url_for('homepage'))
+    if email_form.validate_on_submit():
+        msg_body = f'Subject: My To-Do list -> {datetime.datetime.now().strftime('%Y-%m-%d')}\n\n'
+        for task in saved_tasks:
+            msg_body += f'Task nr: {task.id}\nTask: {task.text}\nTask complete: {task.status}\nTask start date: {task.date_start}\nTask deadline: {task.date_end}\n###############\n'
+        with smtplib.SMTP(MY_MAIL_SMTP, port=587) as connection:
+            connection.starttls()
+            connection.login(user=MY_MAIL, password=MY_MAIL_PASSWORD)
+            connection.sendmail(from_addr=MY_MAIL, to_addrs=request.form['email'], msg=msg_body)
+        flash('Email has been sent.')
+        return redirect(url_for('homepage'))
 
-    return render_template('index.html', addtaskform=add_task_form, temporary_tasks=temporary_tasks, saved=saved_tasks)
+    return render_template('index.html', addtaskform=add_task_form, email_form=email_form,
+                           temporary_tasks=temporary_tasks, saved=saved_tasks)
 
 
 @app.route('/save', methods=['GET', 'POST'])
@@ -81,6 +98,10 @@ def save_temporary():
         db.session.commit()
 
     return redirect(url_for('homepage'))
+
+
+def send_as_email():
+    pass
 
 
 @app.route('/mark', methods=['POST', 'GET'])
